@@ -41,27 +41,27 @@ Result Accuracy = 0.9100000000000006
 # 내 데이터로 테스트
 print("내 데이터로 테스트")
 
-with open('./data/test2000_images.json') as data_file:
-    data = json.load(data_file)
-images = np.zeros((len(data), 784))
-for i in range(len(data)):
-    images[i] = data[i]
+# with open('./data/test2000_images.json') as data_file:
+#     data = json.load(data_file)
+# images = np.zeros((len(data), 784))
+# for i in range(len(data)):
+#     images[i] = data[i]
 
-with open('./data/test2000_correctValues.json') as data_file:
-    data = json.load(data_file)
-correct_vals = np.zeros((len(data), 10))
-for i in range(len(data)):
-    correct_vals[i] = data[i]
-
-with tf.Session() as sess:
-    sess.run(init)
-    for i in range(len(correct_vals)):
-        nn_index = sess.run(pred, feed_dict={train_pixel_tensor: train_pixels, test_pixel_tensor: images[i, :]})
-        print("Test No. ", i, "Predict Class: ", np.argmax(train_list_values[nn_index]), "True class: ",
-              np.argmax(correct_vals[i]))
-        if np.argmax(train_list_values[nn_index]) == np.argmax(correct_vals[i]):
-            accuracy += 1.0 / len(images)
-    print("내 데이터로 테스트 ", accuracy)
+# with open('./data/test2000_correctValues.json') as data_file:
+#     data = json.load(data_file)
+# correct_vals = np.zeros((len(data), 10))
+# for i in range(len(data)):
+#     correct_vals[i] = data[i]
+#
+# with tf.Session() as sess:
+#     sess.run(init)
+#     for i in range(len(correct_vals)):
+#         nn_index = sess.run(pred, feed_dict={train_pixel_tensor: train_pixels, test_pixel_tensor: images[i, :]})
+#         print("Test No. ", i, "Predict Class: ", np.argmax(train_list_values[nn_index]), "True class: ",
+#               np.argmax(correct_vals[i]))
+#         if np.argmax(train_list_values[nn_index]) == np.argmax(correct_vals[i]):
+#             accuracy += 1.0 / len(images)
+#     print("내 데이터로 테스트 ", accuracy)
 
 '''
 0.91287017

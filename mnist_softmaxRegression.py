@@ -56,9 +56,19 @@ for i in range(len(data)):
     correct_vals[i] = data[i]
 
 prediction = tf.argmax(y, 1)
-print(sess.run(prediction, feed_dict={x: images, y_: correct_vals}))
-print(sess.run(accuracy, feed_dict={x: images, y_: correct_vals}))
+print(sess.run(prediction, feed_dict={x: [images[0]], y_: [correct_vals[0]]}),
+      correct_vals[0][sess.run(prediction, feed_dict={x: [images[0]], y_: [correct_vals[0]]})] == 1.)
 
+print(sess.run(prediction, feed_dict={x: [images[1]], y_: [correct_vals[1]]}),
+      correct_vals[1][sess.run(prediction, feed_dict={x: [images[1]], y_: [correct_vals[1]]})] == 1.)
+
+print(sess.run(prediction, feed_dict={x: [images[2]], y_: [correct_vals[2]]}),
+      correct_vals[2][sess.run(prediction, feed_dict={x: [images[2]], y_: [correct_vals[2]]})] == 1.)
+
+print(sess.run(prediction, feed_dict={x: images, y_: correct_vals}))
+
+print(sess.run(accuracy, feed_dict={x: images, y_: correct_vals}))
 '''
 0.91059226
 '''
+
