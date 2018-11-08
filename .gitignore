@@ -2,6 +2,7 @@
 /data/*
 *.txt
 *.csv
+*.json
 /MNIST_data/*
 /forSvm/*
 

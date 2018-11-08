@@ -39,6 +39,25 @@ print(sess.run(accuracy, feed_dict={x: mnist.test.images, y_: mnist.test.labels}
 0.9181
 '''
 
+
+def get_hot_idx(arr):
+    max_val = -1
+    max_idx = -1
+    for idx in range(0, len(arr)):
+        e = arr[idx]
+        if max_val < e:
+            max_val = e
+            max_idx = idx
+    return max_idx
+
+
+def save_to_json_file(filename, d):
+    obj = open(filename, 'wb')
+    with open(filename, 'w') as outfile:
+        json.dump(d, outfile)
+    obj.close()
+
+
 # 내 데이터로 테스트
 print("내 데이터로 테스트")
 
@@ -55,18 +74,16 @@ for i in range(len(data)):
     correct_vals[i] = data[i]
 
 prediction = tf.argmax(y, 1)
-print(sess.run(prediction, feed_dict={x: [images[0]], y_: [correct_vals[0]]}),
-      correct_vals[0][sess.run(prediction, feed_dict={x: [images[0]], y_: [correct_vals[0]]})] == 1.)
 
-print(sess.run(prediction, feed_dict={x: [images[1]], y_: [correct_vals[1]]}),
-      correct_vals[1][sess.run(prediction, feed_dict={x: [images[1]], y_: [correct_vals[1]]})] == 1.)
+res = []
+for i in range(0, len(correct_vals)):
+    real = int(get_hot_idx(correct_vals[i]))
+    predict = int(sess.run(prediction, feed_dict={x: [images[i]], y_: [correct_vals[i]]})[0])
+    res.append([real, predict])
 
-print(sess.run(prediction, feed_dict={x: [images[2]], y_: [correct_vals[2]]}),
-      correct_vals[2][sess.run(prediction, feed_dict={x: [images[2]], y_: [correct_vals[2]]})] == 1.)
+save_to_json_file('./result/softmax_regression.json', res)
 
-print(sess.run(prediction, feed_dict={x: images, y_: correct_vals}))
-
-print(sess.run(accuracy, feed_dict={x: images, y_: correct_vals}))
+# print(correct_times/len(correct_vals))
 '''
-0.91059226
+0.9080
 '''

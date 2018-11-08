@@ -13,7 +13,7 @@ mnist = input_data.read_data_sets("MNIST_data/", one_hot=True)
 
 # parameters
 learning_rate = 0.001
-training_epochs = 5
+training_epochs = 15
 batch_size = 100
 
 # input place holders
@@ -95,21 +95,51 @@ Label:  [9]
 Prediction:  [9]
 '''
 
+
+def get_hot_idx(arr):
+    max_val = -1
+    max_idx = -1
+    for idx in range(0, len(arr)):
+        e = arr[idx]
+        if max_val < e:
+            max_val = e
+            max_idx = idx
+    return max_idx
+
+
+def save_to_json_file(filename, d):
+    obj = open(filename, 'wb')
+    with open(filename, 'w') as outfile:
+        json.dump(d, outfile)
+    obj.close()
+
+
 # 내 데이터로 테스트
 print("내 데이터로 테스트")
 
-with open('./data/test2000_images.json') as data_file:
+with open('./data/mnist_png_testing/images.json') as data_file:
     data = json.load(data_file)
 images = np.zeros((len(data), 784))
 for i in range(len(data)):
     images[i] = data[i]
 
-with open('./data/test2000_correctValues.json') as data_file:
+with open('./data/mnist_png_testing/correctValues.json') as data_file:
     data = json.load(data_file)
 correct_vals = np.zeros((len(data), 10))
 for i in range(len(data)):
     correct_vals[i] = data[i]
 
-correct_prediction = tf.equal(tf.argmax(hypothesis, 1), tf.argmax(Y, 1))
-accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
-print('네 데이터로 테스트 ', sess.run(accuracy, feed_dict={X: images, Y: correct_vals}))
+prediction = tf.argmax(hypothesis, 1)
+
+res = []
+# score = 0
+for i in range(0, len(correct_vals)):
+    real = int(get_hot_idx(correct_vals[i]))
+    predict = int(sess.run(prediction, feed_dict={X: images[i:i + 1]})[0])
+    # if real == predict:
+    #     score = score + 1
+    res.append([real, predict])
+
+# print(score / 10000)
+'''0.9439'''
+save_to_json_file('./result/neural_network.json', res)

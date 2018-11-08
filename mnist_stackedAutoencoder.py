@@ -5,6 +5,8 @@
 # [UFLDL Tutorial – 1. 오토인코더(Sparse Autoencoder) 1 – AutoEncoders & Sparsity]
 
 import tensorflow as tf
+import json
+import numpy as np
 
 from tensorflow.examples.tutorials.mnist import input_data
 
@@ -13,10 +15,10 @@ mnist = input_data.read_data_sets("./mnist_data", one_hot=True)
 # 파라미터 설정
 learning_rate_RMSProp = 0.01
 learning_rate_Gradient_Descent = 0.5
-training_epochs = 15  # epoch 횟수 (iteration)
+training_epochs = 50  # epoch 횟수 (iteration)
 softmax_classifier_iterations = 1000  # Softmax Classifier iteration 횟수
 batch_size = 256
-display_step = 1  # 몇 Step마다 log를 출력할지 결정한다.
+display_step = 5  # 몇 Step마다 log를 출력할지 결정한다.
 examples_to_show = 10  # reconstruct된 이미지 중 몇개를 보여줄지를 결정한다.
 n_hidden_1 = 200  # 첫번째 히든레이어의 노드 개수
 n_hidden_2 = 200  # 두번째 히든레이어의 노드 개수
@@ -48,6 +50,24 @@ def build_softmax_classifier():
     y_pred = tf.nn.softmax(
         tf.matmul(extracted_features, W) + b)  # 예측된 Output : 두번째 히든레이어의 activation output을 input으로 사용한다.
     return y_pred
+
+
+def get_hot_idx(arr):
+    max_val = -1
+    max_idx = -1
+    for idx in range(0, len(arr)):
+        e = arr[idx]
+        if max_val < e:
+            max_val = e
+            max_idx = idx
+    return max_idx
+
+
+def save_to_json_file(filename, d):
+    obj = open(filename, 'wb')
+    with open(filename, 'w') as outfile:
+        json.dump(d, outfile)
+    obj.close()
 
 
 # 학습에 필요한 변수들 설정
@@ -123,27 +143,57 @@ with tf.Session() as sess:
     print("Accuracy(after fine-tuning): ")  # Accuracy ~ 0.9714
     print(sess.run(accuracy, feed_dict={X: mnist.test.images, y_: mnist.test.labels}))
 
-'''
-Extracting ./mnist_data/train-images-idx3-ubyte.gz
-Extracting ./mnist_data/train-labels-idx1-ubyte.gz
-Extracting ./mnist_data/t10k-images-idx3-ubyte.gz
-Extracting ./mnist_data/t10k-labels-idx1-ubyte.gz
-Epoch: 0001 cost= 0.178233355
-Epoch: 0002 cost= 0.146527156
-Epoch: 0003 cost= 0.133671910
-Epoch: 0004 cost= 0.127620995
-Epoch: 0005 cost= 0.126519501
-Epoch: 0006 cost= 0.123915642
-Epoch: 0007 cost= 0.120452702
-Epoch: 0008 cost= 0.117654808
-Epoch: 0009 cost= 0.117769420
-Epoch: 0010 cost= 0.115769677
-Epoch: 0011 cost= 0.114197388
-Epoch: 0012 cost= 0.108472437
-Epoch: 0013 cost= 0.109850086
-Epoch: 0014 cost= 0.105722561
-Epoch: 0015 cost= 0.102819115
-Stacked Autoencoder pre-training Optimization Finished!
-Softmax Classifier Optimization Finished!
-Accuracy(before fine-tuning): 0.8693 (학습 많이하고 fine-tuning 하면 95% 이상 나옴)
-'''
+    '''
+    Extracting ./mnist_data/train-images-idx3-ubyte.gz
+    Extracting ./mnist_data/train-labels-idx1-ubyte.gz
+    Extracting ./mnist_data/t10k-images-idx3-ubyte.gz
+    Extracting ./mnist_data/t10k-labels-idx1-ubyte.gz
+    Epoch: 0001 cost= 0.178233355
+    Epoch: 0002 cost= 0.146527156
+    Epoch: 0003 cost= 0.133671910
+    Epoch: 0004 cost= 0.127620995
+    Epoch: 0005 cost= 0.126519501
+    Epoch: 0006 cost= 0.123915642
+    Epoch: 0007 cost= 0.120452702
+    Epoch: 0008 cost= 0.117654808
+    Epoch: 0009 cost= 0.117769420
+    Epoch: 0010 cost= 0.115769677
+    Epoch: 0011 cost= 0.114197388
+    Epoch: 0012 cost= 0.108472437
+    Epoch: 0013 cost= 0.109850086
+    Epoch: 0014 cost= 0.105722561
+    Epoch: 0015 cost= 0.102819115
+    Stacked Autoencoder pre-training Optimization Finished!
+    Softmax Classifier Optimization Finished!
+    Accuracy(before fine-tuning): 0.8693 (학습 많이하고 fine-tuning 하면 95% 이상 나옴)
+    '''
+
+    # 내 데이터로 테스트
+    print("내 데이터로 테스트")
+
+    with open('./data/mnist_png_testing/images.json') as data_file:
+        data = json.load(data_file)
+    images = np.zeros((len(data), 784))
+    for i in range(len(data)):
+        images[i] = data[i]
+
+    with open('./data/mnist_png_testing/correctValues.json') as data_file:
+        data = json.load(data_file)
+    correct_vals = np.zeros((len(data), 10))
+    for i in range(len(data)):
+        correct_vals[i] = data[i]
+
+    prediction = tf.argmax(y, 1)
+
+    res = []
+    score = 0
+    for i in range(0, len(correct_vals)):
+        real = int(get_hot_idx(correct_vals[i]))
+        predict = int(sess.run(prediction, feed_dict={X: images[i:i + 1], y_: correct_vals[i:1 + 1]})[0])
+        if real == predict:
+            score = score + 1
+        res.append([real, predict])
+
+    print(score / 10000)
+    '''0.9493'''
+    save_to_json_file('./result/stacked_autoencoder.json', res)

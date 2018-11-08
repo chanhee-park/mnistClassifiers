@@ -16,6 +16,13 @@ def get_hot_idx(arr):
     return max_idx
 
 
+def save_to_json_file(filename, d):
+    obj = open(filename, 'wb')
+    with open(filename, 'w') as outfile:
+        json.dump(d, outfile)
+    obj.close()
+
+
 # Process data & train
 data = pd.read_csv("./data/mnist_train.csv")
 
@@ -35,7 +42,7 @@ unknown = np.zeros((len(data), 784))
 for i in range(len(data)):
     unknown[i] = data[i]
 
-y_out = rfc.predict(unknown)
+y_out = rfc.predict(unknown).tolist()
 
 with open('./data/mnist_png_testing/correctValues.json') as data_file:
     data = json.load(data_file)
@@ -44,11 +51,13 @@ for d in data:
     correct_val = get_hot_idx(d)
     correct_vals.append(correct_val)
 
-correct_times = 0
-for i in range(0, len(y_out)):
-    if y_out[i] == correct_vals[i]:
-        correct_times = correct_times + 1
+res = []
+for idx in range(0, len(y_out)):
+    real = correct_vals[idx]
+    predict = y_out[idx]
+    res.append([real, predict])
 
-test_score = correct_times / len(y_out)
+save_to_json_file('./result/random_forest.json', res)
 
+# test_score = correct_times / len(y_out)
 '''0.9428'''
