@@ -39,17 +39,16 @@ print(sess.run(accuracy, feed_dict={x: mnist.test.images, y_: mnist.test.labels}
 0.9181
 '''
 
-
 # 내 데이터로 테스트
 print("내 데이터로 테스트")
 
-with open('./data/test2000_images.json') as data_file:
+with open('./data/mnist_png_testing/images.json') as data_file:
     data = json.load(data_file)
 images = np.zeros((len(data), 784))
 for i in range(len(data)):
     images[i] = data[i]
 
-with open('./data/test2000_correctValues.json') as data_file:
+with open('./data/mnist_png_testing/correctValues.json') as data_file:
     data = json.load(data_file)
 correct_vals = np.zeros((len(data), 10))
 for i in range(len(data)):
@@ -71,4 +70,3 @@ print(sess.run(accuracy, feed_dict={x: images, y_: correct_vals}))
 '''
 0.91059226
 '''
-
