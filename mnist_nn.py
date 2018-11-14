@@ -12,9 +12,9 @@ mnist = input_data.read_data_sets("MNIST_data/", one_hot=True)
 # more information about the mnist dataset
 
 # parameters
-learning_rate = 0.001
-training_epochs = 15
+training_epochs = 10
 batch_size = 100
+learning_rate = 0.01
 
 # input place holders
 X = tf.placeholder(tf.float32, [None, 784])
@@ -25,11 +25,11 @@ W1 = tf.Variable(tf.random_normal([784, 256]))
 b1 = tf.Variable(tf.random_normal([256]))
 L1 = tf.nn.relu(tf.matmul(X, W1) + b1)
 
-W2 = tf.Variable(tf.random_normal([256, 256]))
-b2 = tf.Variable(tf.random_normal([256]))
+W2 = tf.Variable(tf.random_normal([256, 128]))
+b2 = tf.Variable(tf.random_normal([128]))
 L2 = tf.nn.relu(tf.matmul(L1, W2) + b2)
 
-W3 = tf.Variable(tf.random_normal([256, 10]))
+W3 = tf.Variable(tf.random_normal([128, 10]))
 b3 = tf.Variable(tf.random_normal([10]))
 hypothesis = tf.matmul(L2, W3) + b3
 
@@ -132,14 +132,14 @@ for i in range(len(data)):
 prediction = tf.argmax(hypothesis, 1)
 
 res = []
-# score = 0
+score = 0
 for i in range(0, len(correct_vals)):
     real = int(get_hot_idx(correct_vals[i]))
     predict = int(sess.run(prediction, feed_dict={X: images[i:i + 1]})[0])
-    # if real == predict:
-    #     score = score + 1
+    if real == predict:
+        score = score + 1
     res.append([real, predict])
 
-# print(score / 10000)
+print(score / 10000)
 '''0.9439'''
 save_to_json_file('./result/neural_network.json', res)

@@ -11,6 +11,11 @@ from tensorflow.examples.tutorials.mnist import input_data
 
 mnist = input_data.read_data_sets("./mnist_data", one_hot=True)
 
+# parameters
+training_epochs = 1000
+batch_size = 100
+learning_rate = 0.05
+
 # 변수들을 설정한다.
 x = tf.placeholder(tf.float32, [None, 784])
 W = tf.Variable(tf.zeros([784, 10]))
@@ -20,14 +25,14 @@ y = tf.nn.softmax(tf.matmul(x, W) + b)
 # cross-entropy 모델을 설정한다.
 y_ = tf.placeholder(tf.float32, [None, 10])
 cross_entropy = tf.reduce_mean(-tf.reduce_sum(y_ * tf.log(y), reduction_indices=[1]))
-train_step = tf.train.GradientDescentOptimizer(0.5).minimize(cross_entropy)
+train_step = tf.train.GradientDescentOptimizer(learning_rate).minimize(cross_entropy)
 
 # 경사하강법으로 모델을 학습한다.
 init = tf.initialize_all_variables()
 sess = tf.Session()
 sess.run(init)
-for i in range(1000):
-    batch_xs, batch_ys = mnist.train.next_batch(100)
+for i in range(training_epochs):
+    batch_xs, batch_ys = mnist.train.next_batch(batch_size)
     sess.run(train_step, feed_dict={x: batch_xs, y_: batch_ys})
 
 # 학습된 모델이 얼마나 정확한지를 출력한다.
@@ -76,14 +81,17 @@ for i in range(len(data)):
 prediction = tf.argmax(y, 1)
 
 res = []
+correct_times = 0
 for i in range(0, len(correct_vals)):
     real = int(get_hot_idx(correct_vals[i]))
     predict = int(sess.run(prediction, feed_dict={x: [images[i]], y_: [correct_vals[i]]})[0])
     res.append([real, predict])
+    if real == predict:
+        correct_times = correct_times+1
 
 save_to_json_file('./result/softmax_regression.json', res)
 
-# print(correct_times/len(correct_vals))
+print(correct_times/len(correct_vals))
 '''
-0.9080
+0.8912
 '''

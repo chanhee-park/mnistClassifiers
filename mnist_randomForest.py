@@ -28,11 +28,12 @@ data = pd.read_csv("./data/mnist_train.csv")
 
 X = data.iloc[:, 1:]
 y = data['label']
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-rfc = RandomForestClassifier(n_jobs=-1, n_estimators=10)
+rfc = RandomForestClassifier(n_jobs=-1, n_estimators=5)
 rfc.fit(X_train, y_train)
 score = rfc.score(X_test, y_test)
+print("test : ", score)
 '''0.9404'''
 
 # apply to my data
@@ -52,12 +53,16 @@ for d in data:
     correct_vals.append(correct_val)
 
 res = []
+correct_times = 0
 for idx in range(0, len(y_out)):
     real = correct_vals[idx]
     predict = y_out[idx]
     res.append([real, predict])
+    if real == predict:
+        correct_times = correct_times + 1
 
 save_to_json_file('./result/random_forest.json', res)
 
-# test_score = correct_times / len(y_out)
-'''0.9428'''
+test_score = correct_times / len(y_out)
+print(test_score)
+'''0.9060'''

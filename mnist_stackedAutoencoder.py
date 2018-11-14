@@ -15,13 +15,17 @@ mnist = input_data.read_data_sets("./mnist_data", one_hot=True)
 # 파라미터 설정
 learning_rate_RMSProp = 0.01
 learning_rate_Gradient_Descent = 0.5
-training_epochs = 50  # epoch 횟수 (iteration)
+
+training_epochs = 10  # epoch 횟수 (iteration)
 softmax_classifier_iterations = 1000  # Softmax Classifier iteration 횟수
-batch_size = 256
-display_step = 5  # 몇 Step마다 log를 출력할지 결정한다.
+batch_size = 100  # batch size
+
+display_step = 1  # 몇 Step마다 log를 출력할지 결정한다.
+
 examples_to_show = 10  # reconstruct된 이미지 중 몇개를 보여줄지를 결정한다.
-n_hidden_1 = 200  # 첫번째 히든레이어의 노드 개수
-n_hidden_2 = 200  # 두번째 히든레이어의 노드 개수
+
+n_hidden_1 = 256  # 첫번째 히든레이어의 노드 개수
+n_hidden_2 = 128  # 두번째 히든레이어의 노드 개수
 n_input = 784  # MNIST 데이터 input (이미지 크기: 28*28)
 
 
@@ -116,7 +120,7 @@ with tf.Session() as sess:
 
     # Step 3: Softmax Classifier를 학습한다.
     for i in range(softmax_classifier_iterations):
-        batch_xs, batch_ys = mnist.train.next_batch(100)
+        batch_xs, batch_ys = mnist.train.next_batch(batch_size)
         sess.run(softmax_classifier_optimizer, feed_dict={X: batch_xs, y_: batch_ys})
     print("Softmax Classifier Optimization Finished!")
 
@@ -142,31 +146,6 @@ with tf.Session() as sess:
     # Step 6: 학습된 모델이 얼마나 정확한지를 출력한다. (After fine-tuning)
     print("Accuracy(after fine-tuning): ")  # Accuracy ~ 0.9714
     print(sess.run(accuracy, feed_dict={X: mnist.test.images, y_: mnist.test.labels}))
-
-    '''
-    Extracting ./mnist_data/train-images-idx3-ubyte.gz
-    Extracting ./mnist_data/train-labels-idx1-ubyte.gz
-    Extracting ./mnist_data/t10k-images-idx3-ubyte.gz
-    Extracting ./mnist_data/t10k-labels-idx1-ubyte.gz
-    Epoch: 0001 cost= 0.178233355
-    Epoch: 0002 cost= 0.146527156
-    Epoch: 0003 cost= 0.133671910
-    Epoch: 0004 cost= 0.127620995
-    Epoch: 0005 cost= 0.126519501
-    Epoch: 0006 cost= 0.123915642
-    Epoch: 0007 cost= 0.120452702
-    Epoch: 0008 cost= 0.117654808
-    Epoch: 0009 cost= 0.117769420
-    Epoch: 0010 cost= 0.115769677
-    Epoch: 0011 cost= 0.114197388
-    Epoch: 0012 cost= 0.108472437
-    Epoch: 0013 cost= 0.109850086
-    Epoch: 0014 cost= 0.105722561
-    Epoch: 0015 cost= 0.102819115
-    Stacked Autoencoder pre-training Optimization Finished!
-    Softmax Classifier Optimization Finished!
-    Accuracy(before fine-tuning): 0.8693 (학습 많이하고 fine-tuning 하면 95% 이상 나옴)
-    '''
 
     # 내 데이터로 테스트
     print("내 데이터로 테스트")
@@ -195,5 +174,5 @@ with tf.Session() as sess:
         res.append([real, predict])
 
     print(score / 10000)
-    '''0.9493'''
+    '''0.9233'''
     save_to_json_file('./result/stacked_autoencoder.json', res)

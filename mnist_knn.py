@@ -1,42 +1,7 @@
 import numpy as np
-import tensorflow as tf
 import json
-
+import tensorflow as tf
 from tensorflow.examples.tutorials.mnist import input_data
-
-mnist = input_data.read_data_sets("./mnist_data", one_hot=True)
-
-# 1000개 이미지 학습, 100개 이미지 테스트
-train_pixels, train_list_values = mnist.train.next_batch(1000)
-test_pixels, test_list_of_values = mnist.test.next_batch(100)
-
-# 텐서 정의
-train_pixel_tensor = tf.placeholder("float", [None, 784])
-test_pixel_tensor = tf.placeholder("float", [784])
-
-# 비용함수 정의 텐서의 차원을 탐색하며 개체들의 총합 계산
-# _reduce_sum 함수: 텐서의 차원을 탐색하며 개체의 총합 계산
-distance = tf.reduce_sum(tf.abs(tf.add(train_pixel_tensor, tf.neg(test_pixel_tensor))), reduction_indices=1)
-
-# 비용함수 최소화를 위해 arg_min 사용 가장 작은 거리를 갖는 인덱스 리턴(최근접 이웃)
-pred = tf.arg_min(distance, 0)
-
-# 학습데이터로 돌려보기
-accuracy = 0
-init = tf.initialize_all_variables()
-with tf.Session() as sess:
-    sess.run(init)
-    for i in range(len(test_list_of_values)):
-        nn_index = sess.run(pred, feed_dict={train_pixel_tensor: train_pixels, test_pixel_tensor: test_pixels[i, :]})
-        # print("Test No. ", i, "Predict Class: ", np.argmax(train_list_values[nn_index]), "True class: ",
-        #       np.argmax(test_list_of_values[i]))
-        if np.argmax(train_list_values[nn_index]) == np.argmax(test_list_of_values[i]):
-            accuracy += 1.0 / len(test_pixels)
-            # print("Result Accuracy =", accuracy)
-
-'''
-Result Accuracy = 0.9100000000000006
-'''
 
 
 def get_hot_idx(arr):
@@ -50,6 +15,49 @@ def get_hot_idx(arr):
     return max_idx
 
 
+# prepare data
+mnist = input_data.read_data_sets("./mnist_data", one_hot=True)
+tf.set_random_seed(777)  # reproducibility
+np.random.seed(59)
+
+# 1000 데이터 기반으로 100개 데이터 테스트
+x_vals_train, y_vals_train = mnist.train.next_batch(2000)
+x_vals_test, y_vals_test = mnist.test.next_batch(100)
+
+n_feature = len(x_vals_train[0])
+n_class = len(y_vals_train[0])
+
+x_data_train = tf.placeholder(shape=[None, n_feature], dtype=tf.float32)
+y_data_train = tf.placeholder(shape=[None, n_class], dtype=tf.float32)
+x_data_test = tf.placeholder(shape=[None, n_feature], dtype=tf.float32)
+
+# manhattan distance
+distance = tf.reduce_sum(tf.abs(tf.sub(x_data_train, tf.expand_dims(x_data_test, 1))), 2)
+
+# nearest k points
+k = 3
+_, top_k_indices = tf.nn.top_k(tf.neg(distance), k=k)
+top_k_label = tf.gather(y_data_train, top_k_indices)
+
+sum_up_predictions = tf.reduce_sum(top_k_label, 1)
+prediction = tf.argmax(sum_up_predictions, dimension=1)
+
+
+# sess = tf.Session()
+# prediction_outcome = sess.run(prediction, feed_dict={x_data_train: x_vals_train,
+#                                                      x_data_test: x_vals_test,
+#                                                      y_data_train: y_vals_train})
+#
+# # evaluation
+# accuracy = 0
+# for pred, actual in zip(prediction_outcome, y_vals_test):
+#     print(pred, actual)
+#     if pred == np.argmax(actual):
+#         accuracy += 1
+#
+# print('K is', k, ':', accuracy / len(prediction_outcome))
+
+
 def save_to_json_file(filename, d):
     obj = open(filename, 'wb')
     with open(filename, 'w') as outfile:
@@ -58,7 +66,7 @@ def save_to_json_file(filename, d):
 
 
 # 내 데이터로 테스트
-print("내 데이터로 테스트")
+print("데이터 불러오는 중")
 
 with open('./data/mnist_png_testing/images.json') as data_file:
     data = json.load(data_file)
@@ -68,23 +76,35 @@ for i in range(len(data)):
 
 with open('./data/mnist_png_testing/correctValues.json') as data_file:
     data = json.load(data_file)
-correct_vals = np.zeros((len(data), 10))
+correct_vals = []
 for i in range(len(data)):
-    correct_vals[i] = data[i]
+    correct_vals.append(get_hot_idx(data[i]))
 
-with tf.Session() as sess:
-    sess.run(init)
-    res = []
-    for i in range(len(correct_vals)):
-        nn_index = sess.run(pred, feed_dict={train_pixel_tensor: train_pixels, test_pixel_tensor: images[i, :]})
-        real = int(np.argmax(correct_vals[i]))
-        predict = int(np.argmax(train_list_values[nn_index]))
-        res.append([real, predict])
+# evaluation
+print("세션 생성 및 결과 계산")
+res = []
+batch = 0
+batch_size = 100
 
+accuracy = 0
+for batch in range(0, len(images), batch_size):
+    next_batch = batch + batch_size
+    sess = tf.Session()
+    prediction_outcome = sess.run(prediction, feed_dict={x_data_train: x_vals_train,
+                                                         y_data_train: y_vals_train,
+                                                         x_data_test: images[batch:next_batch]})
+    print("누적 성능 보기", correct_vals[batch])
+    for pred, actual in zip(prediction_outcome, correct_vals[batch:next_batch]):
+        res.append([int(actual), int(pred)])
+        if pred == actual:
+            accuracy += 1
+    print(accuracy / next_batch)
+
+print(res)
 save_to_json_file('./result/knn.json', res)
 
 '''
 확실히 KNN 예측 속도가 엄청 느리긴 하다.
 성능도 낮다.
-0.8385
+0.875
 '''
